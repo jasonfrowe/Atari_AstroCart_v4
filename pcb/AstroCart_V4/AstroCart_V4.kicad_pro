@@ -701,16 +701,16 @@
       {
         "filename": "AstroCart_V4.kicad_sch",
         "name": "AstroCart_V4",
-        "uuid": "00000000-0000-0000-0000-000000000000"
+        "uuid": "d52bf64f-8942-4b45-8cde-ca6ff4d97d46"
       }
     ],
-    "used_designators": "",
+    "used_designators": "R5",
     "variants": []
   },
   "sheets": [
     [
       "d52bf64f-8942-4b45-8cde-ca6ff4d97d46",
-      "Root"
+      "AstroCart_V4"
     ]
   ],
   "text_variables": {},
