@@ -1,0 +1,27 @@
+build/
+obj_dir/
+lab/psram_lab/build/
+hw/*/build/
+sim/*/lab_uart.txt
+__pycache__/
+.DS_Store
+obj_menu/
+sim/multicart/*.img
+sim/multicart/harness*.hex
+sim/multicart/menu_*.hex
+sim/multicart/harness.bin
+sim/multicart/harness.lst
+sim/multicart/harness.sym
+sim/multicart/*.o
+sim/multicart/*.a78
+sim/multicart/._*
+tests/carts/*.a78
+tests/mathtest/build/
+sim/math/selftest
+# KiCad
+pcb/**/*-backups/
+pcb/**/fp-info-cache
+pcb/**/*.kicad_prl
+pcb/**/*.lck
+pcb/**/*-bak
+pcb/**/.history/

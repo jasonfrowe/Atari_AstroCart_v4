@@ -1,0 +1,7 @@
+      t(ms)  dt(ms)  taken  our_halt  HALT  addr   data  -> bank (sg9: (data&15)+1)
+        511    511    yes      0       -   $8000  0A    11
+        512      1    yes      0       -   $8000  00    1
+        544     32    yes      0       -   $8000  00    1
+        578     34    yes      0       -   $8000  00    1
+       1089    511    yes      0       -   $8000  09    10
+       1600    511    yes      0       -   $8000  00    1

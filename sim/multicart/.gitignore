@@ -1,0 +1,8 @@
+harness.bin
+harness.lst
+harness.sym
+*.hex
+*.o
+*.img
+*.a78
+._*
