@@ -1,53 +1,41 @@
 # AstroCart PCB
 
-`AstroCart_V4/` is the KiCad 9 project for the next board revision. It
-starts as an exact copy of the AstroCart_V2 board that everything in this
-repository was developed on (same netlist: 25 parts, 86 nets; only the
-project name changed), without V2's Gerbers and production files, which
-would no longer match once the board is edited. The copy passes KiCad's
-design rule check with schematic parity (0 violations, 0 unconnected); the
-electrical rule check has one complaint, a power input with no power output
-driving it, which is a matter of a PWR_FLAG.
+`AstroCart_V4/` is the KiCad project for the V4 board revision. It builds
+upon the original AstroCart_V2 board that development was done on,
+incorporating the required hardware bodges and an audio filter improvement.
 
-The V2 board works with this repository's bitstream after two hand
-modifications. They are the two changes to make here.
+## Changes implemented in V4
 
-## Required changes
+The V2 prototype board required hand modifications to operate reliably. These
+modifications, along with an audio low-pass filter component update, have been
+incorporated into the V4 schematic and PCB layout:
 
-| | V2 as drawn | V2 as modified, and what to draw |
+| | V2 as drawn | V4 implementation |
 |---|---|---|
-| 1 | Q1 (BSS138) drain on cartridge pin 31 (IRQ) | Q1 drain on cartridge **pin 2 (HALT)**. Net `/IRQ` at Q1 pin 3 becomes `/HALT` (which already goes to U5 pin 19) |
-| 2 | Q1 gate (net `/T_IRQ`, Tang Nano pin 83) has nothing on it but the FPGA pin | **10 k from Q1's gate to GND.** Without it the gate floats high while the FPGA configures, Q1 pulls HALT during the console's power-on reset and some consoles do not start |
+| 1 | Q1 (BSS138) drain on cartridge pin 31 (`IRQ`) | Q1 drain routed to cartridge **pin 2 (`HALT`)**. In schematic/PCB, gate net is `/Q_HALT` (Tang Nano pin 83). Allows the FPGA to pull HALT low to stop the 6502 (e.g., during `devcart.py load`). |
+| 2 | Q1 gate had no pull-down resistor (floated during FPGA configuration) | Added **R5 (10 kΩ, 0805)** from Q1 gate (`/Q_HALT`) to GND. Prevents Q1 from conducting and asserting HALT during console power-on reset. |
+| 3 | Audio low-pass filter: R1 = 1 kΩ, C8 = 0.1 µF (cutoff ~1.6 kHz) | Updated **C8 to 10 nF** (with R1 = 1 kΩ), raising the low-pass cutoff to **~16 kHz**. Keeps audio clear without attenuating audible high frequencies while still filtering the 264 kHz PWM carrier. |
 
-The details and the symptoms are in `docs/HARDWARE.md`. Renaming the net
-`/T_IRQ` to `/T_HALT_PULL` would match the RTL (`halt_pull`); `/T_HALT` is
-already the name of the HALT input through U5.
+Background context, timing observations, and startup symptoms without the gate
+pull-down are documented in [docs/HARDWARE.md](../docs/HARDWARE.md).
 
-Since build 4 the cart does not pull HALT for games started from the menu
-(bank switches are done without stopping the 6502). Only `devcart.py load`
-without `--no-halt` still uses Q1. It is worth keeping on the board: it
-costs two parts and is the only way the cart can stop the 6502.
+Since build 4, the cart does not pull HALT for games started from the menu
+(bank switches are handled without stopping the 6502). Only `devcart.py load`
+without `--no-halt` uses Q1. It remains on the board because it costs minimal
+parts and provides the only mechanism for the cart to stop the 6502.
 
-## Suggestions for the same revision
+## Remaining suggestions for future revisions
 
-Read from the schematic and from what the development turned up. None is
-needed for the cart to work as it does now; the first two are the most
-worthwhile.
+Read from the schematic and from development findings. None of these are
+strictly necessary for the cart to function as intended:
 
-1. **Audio filter.** R1 (1 k) and C8 (0.1 uF) form a low-pass with its
-   corner at 1.6 kHz, so everything above that is attenuated (about 16 dB at
-   10 kHz) before it reaches the console's audio input. The PWM carrier is
-   264 kHz (67.5 MHz / 256), far above anything audible, so the corner can
-   go much higher: 10 nF for C8 gives 16 kHz. This can be tried on the V2
-   board first by changing the capacitor, and judged by ear against a real
-   POKEY cart. (Not measured: this is from the component values.)
-2. **A button for "back to the menu".** The only way back today is to
+1. **A button for "back to the menu".** The only way back today is to
    power-cycle the FPGA. A push button on a free 3.3 V pin (Tang Nano pins
    68-75 are unconnected), reachable with the cart in the console, would let
    the bitstream do it. The Tang Nano's own buttons S1 and S2 (pins 4 and 3)
    could serve if they can be reached in the shell; a button on the board
    edge is easier to press. Needs RTL as well.
-3. **A14 and A15 through U4.** A0-A13 come through SN74LVC245s on 3.3 V
+2. **A14 and A15 through U4.** A0-A13 come through SN74LVC245s on 3.3 V
    banks, A14 and A15 through the SN74LVC8T245 (U5) on the 1.8 V bank, so the
    two top address lines have different delays and thresholds from the rest;
    the bus logic waits for two equal samples because of it. U4 has two unused
@@ -55,10 +43,10 @@ worthwhile.
    free 3.3 V pins, so all sixteen could take the same path. This changes
    the pin constraints, and the present arrangement works; do it only if the
    board is being re-routed there anyway.
-4. **IRQ, if it is ever wanted** (POKEY interrupts, for example): its own
+3. **IRQ, if it is ever wanted** (POKEY interrupts, for example): its own
    BSS138 with a gate pull-down, on a free pin. U5's eighth channel (A8/B8)
    is free if the cart should also read the line.
-5. **Test points** for PHI2, HALT, R/W, A15 and a data line at the cartridge
+4. **Test points** for PHI2, HALT, R/W, A15 and a data line at the cartridge
    edge: every timing question in this project was answered with a probe on
    those.
 
